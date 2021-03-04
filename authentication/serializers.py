@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
+from .models import User
 from django.contrib.auth import authenticate
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -74,24 +75,25 @@ class ChangepasswordSerializer(serializers.ModelSerializer):
         return validate_data
 
 class ChangeProfileSerializer(serializers.ModelSerializer):
-    address=serializers.TextField()
+    username=serializers.CharField(max_length=255)
+    email=serializers.CharField(max_length=255)
+    address=serializers.CharField(max_length=255)
 
     class Meta:
         model=User
-        fields=['username', 'email', 'last_name', 'first_name', 'address']
+        fields=['username', 'email', 'last_name', 'first_name', 'address', 'avatar']
 
     def update(self, instance, validate_data):
         username=validate_data.get('username', None)
         email=validate_data.get('email', None)
-        if User.objects.filter(username=username):
-            raise serializers.ValidationError({"username":"usename already exists"})
-        if User.objects.filter(email=email):
-            raise serializers.ValidationError({"email": "email already exists"})
+        # if User.objects.filter(email=email) and :
+        #     raise serializers.ValidationError({"email": "email already exists"})
 
-        instance.last_name = validated_data.get('last_name', instance.last_name)
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.email = validated_data.get('email', instance.email)
-        instance.profile.address = validated_data.get('address', instance.address)
+        instance.last_name = validate_data.get('last_name', instance.last_name)
+        instance.first_name = validate_data.get('first_name', instance.first_name)
+        instance.email = validate_data.get('email', instance.email)
+        instance.address = validate_data.get('address', instance.address)
+        instance.avatar = validate_data.get('avatar', instance.avatar)
         instance.save()
         return instance
 

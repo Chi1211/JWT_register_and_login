@@ -1,12 +1,13 @@
 from django.shortcuts import render
-from .serializers import RegisterSerializer, LoginSerializer, ChangepasswordSerializer
+from .serializers import RegisterSerializer, LoginSerializer, ChangepasswordSerializer, ChangeProfileSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import login
 from rest_framework_simplejwt.tokens import RefreshToken
 import jwt
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
+from .models import User
 # Create your views here.
 class RegisterView(APIView):
     permission_classes=(IsAuthenticated,)
@@ -63,15 +64,17 @@ class ChangePasswordView(APIView):
 
 
 class ChangeProfileView(APIView):
-    permission_classes=(IsAuthenticated,)  
+    permission_classes=(IsAuthenticated,)
+    # def get(self)  
     def put(self, request):
         username=request.data['username']
         user=User.objects.get(username=username)
-        serializer = ChangepasswordSerializer(user, data=request.data)
+        serializer=ChangeProfileSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
+        
 
 
 

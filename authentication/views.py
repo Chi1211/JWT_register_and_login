@@ -65,14 +65,40 @@ class ChangePasswordView(APIView):
 
 class ChangeProfileView(APIView):
     permission_classes=(IsAuthenticated,)
-    # def get(self)  
+    def get(self, request):
+        username=request.data['username']
+        user=User.objects.get(username=username)  
+        serializer=ChangeProfileSerializer(user)
+        if serializer:
+            response={
+                # "username":user.username,
+                # "email":user.email,
+                # "last_name":user.last_name,
+                # "first_name":user.first_name,
+                # "address":user.address,
+                # "avatar":user.avatar,
+                "user":serializer.data,
+                "status_code": 200
+            }
+            return Response(response, status=200)
+        return Response({"detai":"error"}, status=400)
     def put(self, request):
         username=request.data['username']
         user=User.objects.get(username=username)
         serializer=ChangeProfileSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            response={
+                # "username":user.username,
+                # "email":user.email,
+                # "last_name":user.last_name,
+                # "first_name":user.first_name,
+                # "address":user.address,
+                # "avatar":user.avatar,
+                "user":serializer.data,
+                "status_code": 200
+            }
+            return Response(response, status=200)
         return Response(serializer.errors, status=400)
         
 

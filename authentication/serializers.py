@@ -2,6 +2,7 @@ from rest_framework import serializers
 # from django.contrib.auth.models import User
 from .models import User
 from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import TokenError, RefreshToken
 
 class RegisterSerializer(serializers.ModelSerializer):
     password=serializers.CharField(max_length=64, min_length=6, write_only=True)
@@ -97,6 +98,21 @@ class ChangeProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-    
+class RefreshTokenSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    default_error_messages = {
+        'bad_token': 'Token is invalid or expired'
+    }
+
+    def validate(self, attrs):
+        self.token = attrs['refresh']
+        return attrs
+
+    def save(self, **kwargs):
+        try:
+            RefreshToken(self.token).blacklist()
+        except TokenError:
+            serializers.ValidationError('bad_token')   
 
 

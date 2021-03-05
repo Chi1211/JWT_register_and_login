@@ -1,11 +1,12 @@
 from django.shortcuts import render
-from .serializers import RegisterSerializer, LoginSerializer, ChangepasswordSerializer, ChangeProfileSerializer
+from .serializers import RegisterSerializer, LoginSerializer, ChangepasswordSerializer, ChangeProfileSerializer, RefreshTokenSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import login
 from rest_framework_simplejwt.tokens import RefreshToken
 import jwt
+from rest_framework import status
 # from django.contrib.auth.models import User
 from .models import User
 # Create your views here.
@@ -38,7 +39,8 @@ class LoginView(APIView):
             "id":user.id,
             "username":user.username,
             "status_code": 200,
-            "token": str(refresh.access_token),
+            "refresh": str(refresh),
+            "acccess": str(refresh.access_token),
             
         }
 
@@ -101,7 +103,13 @@ class ChangeProfileView(APIView):
             return Response(response, status=200)
         return Response(serializer.errors, status=400)
         
-
+class LogoutView(APIView):
+    permission_classes=(IsAuthenticated,)
+    def post(self, request):
+        serializer = RefreshTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 

@@ -2,7 +2,9 @@ from rest_framework import serializers
 # from django.contrib.auth.models import User
 from .models import User
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import TokenError, RefreshToken
+from rest_framework_simplejwt.tokens import TokenError, RefreshToken, Token, BlacklistMixin
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 
 class RegisterSerializer(serializers.ModelSerializer):
     password=serializers.CharField(max_length=64, min_length=6, write_only=True)
@@ -18,6 +20,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         email=validate_data["email"]
         password=validate_data["password"]
         password2=validate_data["password2"]
+        # is_staff=validate_data["is_staff"]
 
         if User.objects.filter(username=username):
             raise serializers.ValidationError({"username":"usename already exists"})
@@ -99,20 +102,55 @@ class ChangeProfileSerializer(serializers.ModelSerializer):
         return instance
 
 class RefreshTokenSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
+    access = serializers.CharField()
 
     default_error_messages = {
         'bad_token': 'Token is invalid or expired'
     }
 
     def validate(self, attrs):
-        self.token = attrs['refresh']
+        self.token = attrs['access']
         return attrs
 
     def save(self, **kwargs):
         try:
-            RefreshToken(self.token).blacklist()
+            AccessToken(self.token).blacklist()
+            
         except TokenError:
-            serializers.ValidationError('bad_token')   
+            serializers.ValidationError('bad_token')  
+
+# class BlacklistMixin():
+#     def check_blacklist(self):
+#         jti = self.payload[api_settings.JTI_CLAIM]
+
+#         if BlacklistedToken.objects.filter(token__jti=jti).exists():
+#             return {"token":"token in blacklisted"}
 
 
+class AccessToken(BlacklistMixin, Token):
+    token_type = 'access'
+    lifetime = api_settings.ACCESS_TOKEN_LIFETIME
+    no_copy_claims = (
+        api_settings.TOKEN_TYPE_CLAIM,
+        'exp',
+        api_settings.JTI_CLAIM,
+        'jti',
+    ) 
+
+
+
+# class CheckTokenSerializer(serializers.Serializer):
+#     access = serializers.CharField(max_length=400)
+
+#     def validate(self, data):
+#         self.access=data['access']
+#         # try:
+#         #     AccessToken(self.access).check_blacklist()
+#         #     return data
+#         # except:
+            
+#         #     return serializers.ValidationError({"error":"error"})
+        
+#         if AccessToken(self.access).check_blacklist():
+#             return serializers.ValidationError({"data":data})
+#         return serializers.ValidationError({"error":"error"})

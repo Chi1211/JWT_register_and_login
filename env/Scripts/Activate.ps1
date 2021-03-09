@@ -27,7 +27,7 @@ function global:deactivate ([switch]$NonDestructive) {
 
 deactivate -nondestructive
 
-$env:VIRTUAL_ENV="D:\Chi\JWT_register_and_login\env"
+$env:VIRTUAL_ENV="C:\Users\Administrator\Desktop\JWT_register_and_login\env"
 
 if (! $env:VIRTUAL_ENV_DISABLE_PROMPT) {
     # Set the prompt to include the env name

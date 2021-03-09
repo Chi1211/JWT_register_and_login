@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="D:\Chi\JWT_register_and_login\env"
+VIRTUAL_ENV="C:\Users\Administrator\Desktop\JWT_register_and_login\env"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

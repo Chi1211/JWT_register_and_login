@@ -1,4 +1,4 @@
-#!d:\chi\jwt_register_and_login\env\scripts\python.exe
+#!c:\users\administrator\desktop\jwt_register_and_login\env\scripts\python.exe
 from django.core import management
 
 if __name__ == "__main__":

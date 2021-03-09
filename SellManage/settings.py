@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'authentication',
     'rest_framework_simplejwt.token_blacklist',
+    'Supplier',
 ]
 
 MIDDLEWARE = [
@@ -80,8 +81,13 @@ WSGI_APPLICATION = 'SellManage.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'SalesManager',
+        'USER': 'postgres',
+        'PASSWORD': 'bichchi',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -136,9 +142,9 @@ REST_FRAMEWORK={
     #     'django_filters.rest_framework.DjangoFilterBackend'
     # ],             
 }
-DEFAULTS  = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=10),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': False,
@@ -160,7 +166,7 @@ DEFAULTS  = {
     'JTI_CLAIM': 'jti',
 
     'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_LIFETIME': timedelta(days=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 MEDIA_ROOT =  os.path.join(BASE_DIR, 'image') 

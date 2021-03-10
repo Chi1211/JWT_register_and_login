@@ -119,12 +119,13 @@ class RefreshTokenSerializer(serializers.Serializer):
         except TokenError:
             serializers.ValidationError('bad_token')  
 
-# class BlacklistMixin():
-#     def check_blacklist(self):
-#         jti = self.payload[api_settings.JTI_CLAIM]
+class BlacklistMixin(BlacklistMixin):
+    def check_blacklist(self):
+        jti = self.payload[api_settings.JTI_CLAIM]
 
-#         if BlacklistedToken.objects.filter(token__jti=jti).exists():
-#             return {"token":"token in blacklisted"}
+        if BlacklistedToken.objects.filter(token__jti=jti).exists():
+            return True
+        return False
 
 
 class AccessToken(BlacklistMixin, Token):

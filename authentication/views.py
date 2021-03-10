@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .serializers import RegisterSerializer, LoginSerializer, ChangepasswordSerializer, ChangeProfileSerializer, RefreshTokenSerializer, AccessToken
+from .serializers import RegisterSerializer, LoginSerializer, ChangepasswordSerializer, ChangeProfileSerializer,  AccessToken
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -9,7 +9,7 @@ import jwt
 from rest_framework import status
 # from django.contrib.auth.models import User
 from .models import User
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 # Create your views here.
 class RegisterView(APIView):
     permission_classes=(IsAuthenticated,)
@@ -108,17 +108,20 @@ class ChangeProfileView(APIView):
 class LogoutView(APIView):
     permission_classes=(IsAuthenticated,)
     def post(self, request):
-        serializer = RefreshTokenSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        tokens = OutstandingToken.objects.filter(user_id=request.user.id)
+        for token in tokens:
+            t, _ = BlacklistedToken.objects.get_or_create(token=token)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 
 class CheckToken(APIView):
-    permission_classes=(AllowAny,)
+    # permission_classes=(AllowAny,)
     def get(self, request):
         access=request.data['access']
+        # if AccessToken(access).check_blacklist() =='a':
+        #     return Response({"token":"token is invalid", "status_code": 403}, status= 403)
+        # # print(AccessToken(access).check_blacklist(), 'self')
         if AccessToken(access).check_blacklist():
             return Response({"token":"token in blacklisted", "status_code": 403}, status= 403)
         return Response({"token":access, "status_code": 200}, status=200)

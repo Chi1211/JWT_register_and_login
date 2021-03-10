@@ -90,8 +90,9 @@ class ChangeProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validate_data):
         username=validate_data.get('username', None)
         email=validate_data.get('email', None)
-        # if User.objects.filter(email=email) and :
-        #     raise serializers.ValidationError({"email": "email already exists"})
+        user= User.objects.filter(email=email)
+        if user and user.username!=username:
+            raise serializers.ValidationError({"email": "email already exists"})
 
         instance.last_name = validate_data.get('last_name', instance.last_name)
         instance.first_name = validate_data.get('first_name', instance.first_name)
@@ -101,28 +102,29 @@ class ChangeProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class RefreshTokenSerializer(serializers.Serializer):
-    access = serializers.CharField()
+# class RefreshTokenSerializer(serializers.Serializer):
+#     id = serializers.IntegerField()
 
-    default_error_messages = {
-        'bad_token': 'Token is invalid or expired'
-    }
+#     default_error_messages = {
+#         'bad_token': 'Token is invalid or expired'
+#     }
 
-    def validate(self, attrs):
-        self.token = attrs['access']
-        return attrs
+#     def validate(self, attrs):
+#         self.id = attrs['id']
+#         return attrs
 
-    def save(self, **kwargs):
-        try:
-            AccessToken(self.token).blacklist()
+#     def save(self, **kwargs):
+#         try:
+#             AccessToken(self.token).blacklist()
             
-        except TokenError:
-            serializers.ValidationError('bad_token')  
+#         except TokenError:
+#             serializers.ValidationError('bad_token')  
 
 class BlacklistMixin(BlacklistMixin):
     def check_blacklist(self):
-        jti = self.payload[api_settings.JTI_CLAIM]
-
+        try:
+            jti = self.payload[api_settings.JTI_CLAIM]
+        except: return 'a'
         if BlacklistedToken.objects.filter(token__jti=jti).exists():
             return True
         return False

@@ -1,24 +1,36 @@
 from django.shortcuts import render
-from .serializers import SupplierSerialier
-from .models import SupplierModel
 from rest_framework.response import Response
-from rest_framework import status
+from .serializers import MaterialSerializer, UnitSerializer
+from .models import MaterialModel, UnitModel
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import status
+from rest_framework import generics
 # Create your views here.
 
-class CreateSupplierView(APIView):
-    permission_classes=(IsAuthenticated,)
+
+class GetUnitView(generics.ListAPIView):
+    # def get(self, request):
+    queryset=UnitModel.objects.all()
+    serializer_class=UnitSerializer
+        # response={
+        #     "data": serializer.data,
+        #     "status_code": status.HTTP_200_OK,
+        # }
+        # return Response(response, status=status.HTTP_200_OK)
+
+class CreateMaterialView(APIView):
+    permission_classes=(AllowAny,)
     def get(self, request):
-        supplier=SupplierModel.objects.all()
-        serializer = SupplierSerialier(supplier, many=True)
+        materia=MaterialModel.objects.all()
+        serializer = MaterialSerializer(materia, many=True)
         response={
             "data": serializer.data,
             "status_code": status.HTTP_200_OK,
         }
         return Response(response, status=status.HTTP_200_OK)
     def post(self, request):
-        serializer=SupplierSerialier(data=request.data)
+        serializer=MaterialSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response={
@@ -27,17 +39,17 @@ class CreateSupplierView(APIView):
         }
         return Response(response, status=status.HTTP_201_CREATED)
         
-class UpdateSupplierView(APIView):
-    permission_classes=(IsAuthenticated,)
+class UpdateMaterialView(APIView):
+    permission_classes=(AllowAny,)
     def get_object(self, pk):
         try: 
-            supplier=SupplierModel.objects.get(pk=pk)
+            material=MaterialModel.objects.get(pk=pk)
             return supplier
-        except SupplierModel.DoesNotExist:
+        except MaterialModel.DoesNotExist:
             return Response({"errors":"errors"}, status=404)
     def get(self, request, pk):
-        supplier=self.get_object(pk)
-        serializer=SupplierSerialier(supplier)
+        material=self.get_object(pk)
+        serializer=MaterialSerializer(material)
         
         response={
             "data": serializer.data,
@@ -45,8 +57,8 @@ class UpdateSupplierView(APIView):
         }
         return Response(response, status=200)
     def put(self, renquest, pk):
-        supplier=self.get_object(pk)
-        serializer=SupplierSerialier(supplier, data=renquest.data)
+        material=self.get_object(pk)
+        serializer=MaterialSerializer(material, data=renquest.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response={
@@ -55,12 +67,12 @@ class UpdateSupplierView(APIView):
         }
         return Response(response, status=status.HTTP_200_OK)
 
-class SearchSupplierView(APIView):
-    permission_classes=(IsAuthenticated,)
+class SearchMaterialView(APIView):
+    permission_classes=(AllowAny,)
     def get(self, request):
         name=request.data["supplier_name"]
-        supplier=SupplierModel.objects.filter(supplier_name__contains=name)
-        serializer = SupplierSerialier(supplier, many=True)
+        material=MaterialModel.objects.filter(material_name__contains=name)
+        serializer = MaterialSerializer(material, many=True)
         response={
             "data": serializer.data,
             "status_code": status.HTTP_200_OK,

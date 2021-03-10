@@ -23,6 +23,7 @@ urlpatterns = [
     path('auth/', include('authentication.urls')),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('supplier/', include('Supplier.urls')),
+    path('material/', include('Material.urls')),
 ]
 if settings.DEBUG:
         urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

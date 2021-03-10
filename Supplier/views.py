@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .serializer import SupplierSerialier
+from .serializers import SupplierSerialier
 from .models import SupplierModel
 from rest_framework.response import Response
 from rest_framework import status
@@ -29,16 +29,40 @@ class CreateSupplierView(APIView):
         
 class UpdateSupplierView(APIView):
     permission_classes=(AllowAny,)
-    def get_objects(self, pk):
+    def get_object(self, pk):
         try: 
             supplier=SupplierModel.objects.get(pk=pk)
+            return supplier
         except SupplierModel.DoesNotExist:
             return Response({"errors":"errors"}, status=404)
     def get(self, request, pk):
-        supplier=self.get_objects(pk)
+        supplier=self.get_object(pk)
         serializer=SupplierSerialier(supplier)
+        
         response={
             "data": serializer.data,
             "status_code": 200
         }
         return Response(response, status=200)
+    def put(self, renquest, pk):
+        supplier=self.get_object(pk)
+        serializer=SupplierSerialier(supplier, data=renquest.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response={
+            'data': serializer.data,
+            'status_code': status.HTTP_200_OK
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
+class SearchSupplierView(APIView):
+    permission_classes=(AllowAny,)
+    def get(self, request):
+        name=request.data["supplier_name"]
+        supplier=SupplierModel.objects.filter(supplier_name__contains=name)
+        serializer = SupplierSerialier(supplier, many=True)
+        response={
+            "data": serializer.data,
+            "status_code": status.HTTP_200_OK,
+        }
+        return Response(response, status=status.HTTP_200_OK)

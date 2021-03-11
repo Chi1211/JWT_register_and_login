@@ -1,5 +1,4 @@
 from rest_framework import serializers
-# from django.contrib.auth.models import User
 from .models import User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import TokenError, RefreshToken, Token, BlacklistMixin
@@ -8,31 +7,50 @@ from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 
 class RegisterSerializer(serializers.ModelSerializer):
     password=serializers.CharField(max_length=64, min_length=6, write_only=True)
-    password2=serializers.CharField(max_length=64, min_length=6,write_only=True)
-    class Meta:
-        model= User
-        fields=['username', 'email', 'password','password2']
+    confirm_password=serializers.CharField(max_length=64, min_length=6, write_only=True)
 
-        extra_kwargs={"password":{"write_oly":True}}
+    class Meta:
+        model=User
+        fields=['username', 'email', 'password','confirm_password', 'is_staff']
+       
 
     def create(self, validate_data):
         username=validate_data["username"]
         email=validate_data["email"]
         password=validate_data["password"]
-        password2=validate_data["password2"]
-        # is_staff=validate_data["is_staff"]
+        confirm_password=validate_data["confirm_password"]
+        is_staff=validate_data["is_staff"]
 
         if User.objects.filter(username=username):
             raise serializers.ValidationError({"username":"usename already exists"})
         if User.objects.filter(email=email):
             raise serializers.ValidationError({"email": "email already exists"})
-        if password !=password2:
+        if password !=confirm_password:
             raise serializers.ValidationError({"password": "password do not match"})
 
-        user = User(username=username, email=email)
+        user = User(username=username, email=email, is_staff=is_staff)
         user.set_password(password)
         user.save()
         return user
+
+class BlacklistMixin(BlacklistMixin):
+    def check_blacklist(self):
+        jti = self.payload[api_settings.JTI_CLAIM]
+        if BlacklistedToken.objects.filter(token__jti=jti).exists():
+            return True
+        return False
+
+# save access token in Outstanding
+class AccessToken(BlacklistMixin, Token):
+    token_type = 'access'
+    lifetime = api_settings.ACCESS_TOKEN_LIFETIME
+    no_copy_claims = (
+        api_settings.TOKEN_TYPE_CLAIM,
+        'exp',
+        api_settings.JTI_CLAIM,
+        'jti',
+    ) 
+
 
 class LoginSerializer(serializers.ModelSerializer):
     username=serializers.CharField(max_length=255)
@@ -54,12 +72,12 @@ class LoginSerializer(serializers.ModelSerializer):
         validate_data['user']=user
         return validate_data
 
-class ChangepasswordSerializer(serializers.ModelSerializer):
+class ChangePasswordSerializer(serializers.ModelSerializer):
     username=serializers.CharField(max_length=255)
     password=serializers.CharField(max_length=64, min_length=6, write_only=True)
     confirm_password=serializers.CharField(max_length=64, min_length=6,write_only=True)
     password_old=serializers.CharField(max_length=64, min_length=6,write_only=True)
-
+    
     class Meta:
         model=User
         fields=['username', 'password','confirm_password','password_old']
@@ -73,7 +91,7 @@ class ChangepasswordSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"detail": "the new password is the same as the old one"})
         user=authenticate(username=username, password=password_old)
         if not user:
-            raise serializers.ValidationError({"password_old": "old password is not correct", "password":user.password})    
+            raise serializers.ValidationError({"password_old": "old password is not correct"})    
         if password !=confirm_password:
             raise serializers.ValidationError({"password": "password do not match"})
         return validate_data
@@ -81,7 +99,6 @@ class ChangepasswordSerializer(serializers.ModelSerializer):
 class ChangeProfileSerializer(serializers.ModelSerializer):
     username=serializers.CharField(max_length=255)
     email=serializers.CharField(max_length=255)
-    address=serializers.CharField(max_length=255)
 
     class Meta:
         model=User
@@ -90,8 +107,8 @@ class ChangeProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validate_data):
         username=validate_data.get('username', None)
         email=validate_data.get('email', None)
-        user= User.objects.filter(email=email)
-        if user and user.username!=username:
+        user= User.objects.get(email=email)
+        if user and str(user.username)!=username:
             raise serializers.ValidationError({"email": "email already exists"})
 
         instance.last_name = validate_data.get('last_name', instance.last_name)
@@ -102,58 +119,19 @@ class ChangeProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-# class RefreshTokenSerializer(serializers.Serializer):
-#     id = serializers.IntegerField()
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=User
+        fields=['username', 'email', 'is_staff', 'is_active']
 
-#     default_error_messages = {
-#         'bad_token': 'Token is invalid or expired'
-#     }
+class UpdateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=User
+        fields=['username', 'email', 'is_staff', 'is_active']
 
-#     def validate(self, attrs):
-#         self.id = attrs['id']
-#         return attrs
-
-#     def save(self, **kwargs):
-#         try:
-#             AccessToken(self.token).blacklist()
-            
-#         except TokenError:
-#             serializers.ValidationError('bad_token')  
-
-class BlacklistMixin(BlacklistMixin):
-    def check_blacklist(self):
-        try:
-            jti = self.payload[api_settings.JTI_CLAIM]
-        except: return 'a'
-        if BlacklistedToken.objects.filter(token__jti=jti).exists():
-            return True
-        return False
-
-
-class AccessToken(BlacklistMixin, Token):
-    token_type = 'access'
-    lifetime = api_settings.ACCESS_TOKEN_LIFETIME
-    no_copy_claims = (
-        api_settings.TOKEN_TYPE_CLAIM,
-        'exp',
-        api_settings.JTI_CLAIM,
-        'jti',
-    ) 
-
-
-
-# class CheckTokenSerializer(serializers.Serializer):
-#     access = serializers.CharField(max_length=400)
-
-#     def validate(self, data):
-#         self.access=data['access']
-#         # try:
-#         #     AccessToken(self.access).check_blacklist()
-#         #     return data
-#         # except:
-            
-#         #     return serializers.ValidationError({"error":"error"})
+    def update(self, instance, validate_data):
+        instance.is_staff = validate_data.get('is_staff', instance.is_staff)
+        instance.is_active = validate_data.get('is_active', instance.is_active)
+        instance.save()
+        return instance
         
-#         if AccessToken(self.access).check_blacklist():
-#             return serializers.ValidationError({"data":data})
-#         return serializers.ValidationError({"error":"error"})

@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class MaterialConfig(AppConfig):
-    name = 'Material'
+    name = 'material'

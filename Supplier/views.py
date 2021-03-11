@@ -1,14 +1,14 @@
 from django.shortcuts import render
-from .serializers import SupplierSerialier
 from .models import SupplierModel
+from .serializer import SupplierSerialier
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 # Create your views here.
 
 class CreateSupplierView(APIView):
-    permission_classes=(IsAuthenticated,)
+    permission_classes=(IsAuthenticated,IsAdminUser, )
     def get(self, request):
         supplier=SupplierModel.objects.all()
         serializer = SupplierSerialier(supplier, many=True)
@@ -28,7 +28,7 @@ class CreateSupplierView(APIView):
         return Response(response, status=status.HTTP_201_CREATED)
         
 class UpdateSupplierView(APIView):
-    permission_classes=(IsAuthenticated,)
+    permission_classes=(IsAuthenticated,IsAdminUser, )
     def get_object(self, pk):
         try: 
             supplier=SupplierModel.objects.get(pk=pk)
@@ -56,7 +56,7 @@ class UpdateSupplierView(APIView):
         return Response(response, status=status.HTTP_200_OK)
 
 class SearchSupplierView(APIView):
-    permission_classes=(IsAuthenticated,)
+    permission_classes=(IsAuthenticated,IsAdminUser, )
     def get(self, request):
         name=request.data["supplier_name"]
         supplier=SupplierModel.objects.filter(supplier_name__contains=name)

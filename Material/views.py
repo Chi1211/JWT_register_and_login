@@ -2,18 +2,10 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UnitSerializer, MaterialSerializer
-from .models import UnitModel, MaterialModel
+from .serializers import MaterialSerializer
+from .models import  MaterialModel
 # Create your views here.
-class GetUnitView(APIView):
-    def get(self, request):
-        unit=UnitModel.objects.all()
-        serializer = UnitSerializer(unit, many=True)
-        response={
-            "data": serializer.data,
-            "status_code": status.HTTP_200_OK,
-        }
-        return Response(response, status=status.HTTP_200_OK)
+
 
 class CreateMaterialView(APIView):
     def get(self, request):

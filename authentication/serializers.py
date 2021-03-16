@@ -5,6 +5,7 @@ from rest_framework_simplejwt.tokens import TokenError, RefreshToken, Token, Bla
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 
+
 class RegisterSerializer(serializers.ModelSerializer):
     password=serializers.CharField(max_length=64, min_length=6, write_only=True)
     confirm_password=serializers.CharField(max_length=64, min_length=6, write_only=True)
@@ -58,17 +59,22 @@ class LoginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model=User
-        fields=['username', 'password']
+        fields=['username', 'password',]
 
     def validate(self, validate_data):
         username=validate_data.get("username", None)
         password=validate_data.get("password", None)
 
-        if not User.objects.filter(username=username):
-            raise serializers.ValidationError({"username":"username does not exist"})
-        user=authenticate(username=username, password=password)
+        # if not User.objects.filter(username=username):
+        #     raise serializers.ValidationError({"username":"username does not exist"})
+
+        try:
+            user=authenticate(username=User.objects.get(email=username), password=password)
+        except:
+            user=authenticate(username=username, password=password) 
+
         if user is None:
-            raise serializers.ValidationError({"password":"password does not exists"})
+            raise serializers.ValidationError({"login":"account incorrect"})
         validate_data['user']=user
         return validate_data
 

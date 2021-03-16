@@ -66,3 +66,5 @@ class SearchSupplierView(APIView):
             "status_code": status.HTTP_200_OK,
         }
         return Response(response, status=status.HTTP_200_OK)
+
+        

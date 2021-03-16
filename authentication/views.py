@@ -3,12 +3,13 @@ from .models import User
 from .serializers import RegisterSerializer, LoginSerializer, AccessToken, ChangePasswordSerializer, ChangeProfileSerializer, UserSerializer, UpdateUserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.contrib.auth import login
+from django.contrib.auth import login,logout
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsSuperUser
+# from django.contrib.auth.
 # Create your views here.
 class RegisterView(APIView):
     def post(self, request):
@@ -30,12 +31,12 @@ class LoginView(APIView):
 
         user=serializer.validated_data['user']
         login(request, user)
-        refresh=AccessToken.for_user(user)
+        access=AccessToken.for_user(user)
         respone={
             "id":user.id,
             "username":user.username,
             "status_code": 200,
-            "token": str(refresh)
+            "token": str(access)
             
         }
 
@@ -43,10 +44,12 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    permission_classes=(AllowAny,)
     def post(self, request):
         tokens = OutstandingToken.objects.filter(user_id=request.user.id)
         for token in tokens:
             BlacklistedToken.objects.get_or_create(token=token)
+        logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class CheckToken(APIView):

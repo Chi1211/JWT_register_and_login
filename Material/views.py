@@ -2,11 +2,19 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import MaterialSerializer
-from .models import  MaterialModel
+from .serializers import MaterialSerializer, ImportMaterialSerializer
+from .models import  MaterialModel, ImportMaterialModel
 # Create your views here.
-
-
+class getMaterialView(APIView):
+    def get(self, request):
+        material=MaterialModel.objects.all()
+        serializer = MaterialSerializer(material, many=True)
+        response={
+            "data": serializer.data,
+            "status_code": status.HTTP_200_OK,
+        }
+        return Response(response, status=status.HTTP_200_OK)
+        
 class CreateMaterialView(APIView):
     def get(self, request):
         material=MaterialModel.objects.all()
@@ -63,3 +71,34 @@ class SearchMaterialView(APIView):
             "status_code": status.HTTP_200_OK,
         }
         return Response(response, status=status.HTTP_200_OK)
+
+
+class getImportMaterialView(APIView):
+    def get(self, request):
+        import_material=ImportMaterialModel.objects.all()
+        serializer = ImportMaterialSerializer(import_material, many=True)
+        response={
+            "data": serializer.data,
+            "status_code": status.HTTP_200_OK,
+        }
+        return Response(response, status=status.HTTP_200_OK)
+        
+class CreateImportMaterialView(APIView):
+    def get(self, request):
+        import_material=ImportMaterialModel.objects.all()
+        serializer = ImportMaterialSerializer(import_material, many=True)
+        response={
+            "data": serializer.data,
+            "status_code": status.HTTP_200_OK,
+        }
+        return Response(response, status=status.HTTP_200_OK)
+    def post(self, request):
+        serializer=ImportMaterialSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response={
+           'data': serializer.data,
+           'status_code': status.HTTP_201_CREATED
+        }
+        return Response(response, status=status.HTTP_201_CREATED)
+

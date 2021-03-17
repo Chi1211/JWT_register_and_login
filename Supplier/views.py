@@ -7,6 +7,16 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 # Create your views here.
 
+class getSupplierView(APIView):
+    def get(self, request):
+        supplier=SupplierModel.objects.all()
+        serializer = SupplierSerialier(supplier, many=True)
+        response={
+            "data": serializer.data,
+            "status_code": status.HTTP_200_OK,
+        }
+        return Response(response, status=status.HTTP_200_OK)
+
 class CreateSupplierView(APIView):
     permission_classes=(IsAuthenticated,IsAdminUser, )
     def get(self, request):
